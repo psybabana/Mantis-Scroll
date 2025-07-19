@@ -12,17 +12,17 @@ import pygame
 pygame.init()
 # List of your sound paths
 sound_paths = [
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com].mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (1).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (2).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (3).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (4).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (5).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (6).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (7).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (8).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (9).mp3",
-    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (10).mp3"
+    r"F:\Codes\sounds\1.mp3",
+    r"F:\Codes\sounds\2.mp3",
+    r"F:\Codes\sounds\3.mp3",
+    r"F:\Codes\sounds\4.mp3",
+    r"F:\Codes\sounds\5.mp3",
+    r"F:\Codes\sounds\6.mp3",
+    r"F:\Codes\sounds\7.mp3",
+    r"F:\Codes\sounds\8.mp3",
+    r"F:\Codes\sounds\9.mp3",
+    r"F:\Codes\sounds\10.mp3",
+    r"F:\Codes\sounds\11.mp3"
 ]
 
 # Load them into pygame sound objects
