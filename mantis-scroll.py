@@ -20,6 +20,8 @@ class WordProcessorApp:
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
+        self.toolbar = tk.Frame(self.root)
+        self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
         self.create_menu()
         self.create_timer_toolbar()
@@ -31,21 +33,33 @@ class WordProcessorApp:
     def create_menu(self):
         menubar = tk.Menu(self.root)
 
+        #File Menu
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="Open", command=self.open_file)
         file_menu.add_command(label="Save", command=self.save_file)
         file_menu.add_command(label="Save As", command=self.save_as)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.quit)
         menubar.add_cascade(label="File", menu=file_menu)
 
+        #Theme Menu
         theme_menu = tk.Menu(menubar, tearoff=0)
         theme_menu.add_command(label="Set Inspiration Image", command=self.select_background_image)
         menubar.add_cascade(label="Theme", menu=theme_menu)
+
+        #Window Menu
+        window_menu = tk.Menu(menubar, tearoff=0)
+        window_menu.add_command(label="Toggle Fullscreen", command=self.toggle_fullscreen)
+        menubar.add_cascade(label="Window", menu=window_menu)
 
         self.root.config(menu=menubar)
 
     def create_timer_toolbar(self):
         timer_frame = tk.Frame(self.root, relief=tk.RAISED, bd=1)
         timer_frame.pack(side=tk.TOP, fill=tk.X)
+        
+        self.timer_text_label = tk.Label(timer_frame, text="Timer:", font=("Arial", 12, "bold"))
+        self.timer_text_label.pack(side=tk.LEFT, padx=(10, 2))
 
         self.timer_label = tk.Label(timer_frame, text="00:00:00.000", font=("Courier", 12, "bold"))
         self.timer_label.pack(side=tk.LEFT, padx=10)
@@ -85,6 +99,10 @@ class WordProcessorApp:
             self.timer_label.config(text=f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}")
         self.root.after(50, self.update_timer_loop)
 
+    def toggle_fullscreen(self):
+        is_fullscreen = self.root.attributes("-fullscreen")
+        self.root.attributes("-fullscreen", not is_fullscreen)
+
     def create_formatting_toolbar(self):
         toolbar = tk.Frame(self.root, relief=tk.RAISED, bd=1)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -121,21 +139,31 @@ class WordProcessorApp:
                                        variable=self.opacity_var, command=self.on_opacity_change)
         self.opacity_slider.pack(side=tk.LEFT, padx=5, pady=2)
 
+        #Fullscreen+
+        self.fullscreen_btn = tk.Button(self.toolbar, text="Fullscreen", command=self.toggle_fullscreen)
+        self.fullscreen_btn.pack(side=tk.RIGHT, padx=2)
+
+
     def create_text_area(self):
         self.container = tk.Frame(self.root)
         self.container.pack(fill=tk.BOTH, expand=True)
 
-        self.bg_canvas = tk.Canvas(self.container, highlightthickness=0)
-        self.bg_canvas.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+         # Fixed-size frame for the background image
+        self.bg_frame = tk.Frame(self.container, width=700)
+        self.bg_frame.pack(side=tk.LEFT, fill=tk.Y)
+        self.bg_frame.pack_propagate(False)
 
+        self.bg_canvas = tk.Canvas(self.bg_frame, highlightthickness=10)
+        self.bg_canvas.pack(fill=tk.BOTH, expand=True)
+
+         # Expandable frame for text area
         self.text_area = ScrolledText(self.container, wrap=tk.WORD, undo=True,
-                                     font=(self.font_family_var.get(), self.font_size_var.get()),
-                                     bg="#ffffff", relief=tk.FLAT)
+                                 font=(self.font_family_var.get(), self.font_size_var.get()),
+                                 bg="#ffffff", relief=tk.FLAT)
         self.text_area.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
         self.text_area.vbar.config(command=self.on_textscroll)
         self.bg_canvas.bind("<Configure>", self.resize_bg)
-
         self.bg_img_original = None
         self.bg_img = None
 
