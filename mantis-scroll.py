@@ -7,7 +7,7 @@ from PIL import Image, ImageTk, ImageEnhance
 class WordProcessorApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("PX Focus Word Processor")
+        self.root.title("Mantis Scroll")
         self.root.attributes("-fullscreen", True)
         self.filename = None
 
@@ -30,7 +30,7 @@ class WordProcessorApp:
         menubar.add_cascade(label="File", menu=file_menu)
 
         theme_menu = tk.Menu(menubar, tearoff=0)
-        theme_menu.add_command(label="Set Background Image", command=self.select_background_image)
+        theme_menu.add_command(label="Set Inspiration Image", command=self.select_background_image)
         menubar.add_cascade(label="Theme", menu=theme_menu)
 
         self.root.config(menu=menubar)
@@ -73,7 +73,7 @@ class WordProcessorApp:
         self.font_size_spinbox.pack(side=tk.LEFT, padx=5, pady=2)
 
         # Opacity slider
-        tk.Label(toolbar, text="BG Opacity").pack(side=tk.LEFT, padx=5)
+        tk.Label(toolbar, text="Inspiration Image Opacity").pack(side=tk.LEFT, padx=5)
         self.opacity_var = tk.DoubleVar(value=self.bg_opacity * 100)
         self.opacity_slider = tk.Scale(toolbar, from_=0, to=100, orient=tk.HORIZONTAL, length=100,
                                        variable=self.opacity_var, command=self.on_opacity_change)
@@ -98,7 +98,7 @@ class WordProcessorApp:
         self.bg_img = None
 
     def select_background_image(self):
-        path = filedialog.askopenfilename(title="Select Background Image",
+        path = filedialog.askopenfilename(title="Select Inspiration Image",
                                           filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
         if not path:
             return
