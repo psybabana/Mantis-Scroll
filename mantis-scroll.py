@@ -3,6 +3,8 @@ from tkinter import filedialog, messagebox, font
 from tkinter.scrolledtext import ScrolledText
 from docx import Document
 from PIL import Image, ImageTk, ImageEnhance
+from docx.shared import Pt
+import tkinter.font as tkfont
 import time
 import threading
 
@@ -277,15 +279,80 @@ class WordProcessorApp:
         self._save(path)
 
     def _save(self, path):
-        content = self.text_area.get("1.0", "end-1c")
         if path.endswith(".txt"):
+            content = self.text_area.get("1.0", "end-1c")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
+
         elif path.endswith(".docx"):
             doc = Document()
-            for line in content.splitlines():
-                doc.add_paragraph(line)
-            doc.save(path)
+            current_index = "1.0"
+
+            while True:
+                line_end = self.text_area.index(f"{current_index} lineend")
+                paragraph = doc.add_paragraph()
+
+                char_index = current_index
+                last_tags = None
+                run_text = ""
+
+                while self.text_area.compare(char_index, "<", line_end):
+                    next_char_index = self.text_area.index(f"{char_index}+1c")
+                    char = self.text_area.get(char_index, next_char_index)
+                    tags = self.text_area.tag_names(char_index)
+                    # Debug print (optional)
+                    print(f"{char!r} at {char_index} has tags: {tags}")
+
+                    # If tags change, flush the current run
+                    if tags != last_tags and run_text:
+                        run = paragraph.add_run(run_text)
+                        if last_tags:
+                            run.bold = "bold" in last_tags
+                            run.italic = "italic" in last_tags
+                            run.underline = "underline" in last_tags
+                            if "subscript" in last_tags:
+                                run.font.subscript = True
+                            if "superscript" in last_tags:
+                                run.font.superscript = True
+
+                        # Set font family and size for run based on Text widget font
+                        tk_font = tkfont.Font(self.text_area, self.text_area.cget("font"))
+                        run.font.name = tk_font.actual("family")
+                        run.font.size = Pt(tk_font.actual("size"))
+
+                        run_text = ""
+
+                    run_text += char
+                    last_tags = tags
+                    char_index = next_char_index
+
+                # Flush any remaining text after line ends
+                if run_text:
+                    run = paragraph.add_run(run_text)
+                    if last_tags:
+                        run.bold = "bold" in last_tags
+                        run.italic = "italic" in last_tags
+                        run.underline = "underline" in last_tags
+                        if "subscript" in last_tags:
+                            run.font.subscript = True
+                        if "superscript" in last_tags:
+                            run.font.superscript = True
+
+                    tk_font = tkfont.Font(self.text_area, self.text_area.cget("font"))
+                    run.font.name = tk_font.actual("family")
+                    run.font.size = Pt(tk_font.actual("size"))
+
+                # Move to the next line
+                current_index = self.text_area.index(f"{line_end}+1c")
+                if self.text_area.compare(current_index, ">=", "end-1c"):
+                    break
+
+            try:
+                doc.save(path)
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Failed to save .docx:\n{e}")
+
+
 
     def open_file(self):
         filetypes = [("Text files", ".txt"), ("Word documents", ".docx")]
@@ -299,8 +366,20 @@ class WordProcessorApp:
                 self.text_area.insert("1.0", f.read())
         elif path.endswith(".docx"):
             doc = Document(path)
-            text = "\n".join(para.text for para in doc.paragraphs)
-            self.text_area.insert("1.0", text)
+            for para in doc.paragraphs:
+                for run in para.runs:
+                    start_index = self.text_area.index("end-1c")
+                    run_text = run.text
+                    self.text_area.insert("end", run_text)
+                    end_index = self.text_area.index("end-1c")
+
+                    if run.bold:
+                        self.text_area.tag_add("bold", start_index, end_index)
+                    if run.italic:
+                        self.text_area.tag_add("italic", start_index, end_index)
+                    if run.underline:
+                        self.text_area.tag_add("underline", start_index, end_index)
+                self.text_area.insert("end", "\n")
 
 
 if __name__ == "__main__":
