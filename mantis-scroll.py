@@ -7,6 +7,26 @@ from docx.shared import Pt
 import tkinter.font as tkfont
 import time
 import threading
+import random
+import pygame
+pygame.init()
+# List of your sound paths
+sound_paths = [
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com].mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (1).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (2).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (3).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (4).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (5).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (6).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (7).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (8).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (9).mp3",
+    r"F:\Codes\sounds\Typewriter(chosic.com)-[AudioTrimmer.com] (10).mp3"
+]
+
+# Load them into pygame sound objects
+type_sounds = [pygame.mixer.Sound(path) for path in sound_paths]
 
 class WordProcessorApp:
     def __init__(self, root):
@@ -53,6 +73,12 @@ class WordProcessorApp:
         window_menu = tk.Menu(menubar, tearoff=0)
         window_menu.add_command(label="Toggle Fullscreen", command=self.toggle_fullscreen)
         menubar.add_cascade(label="Window", menu=window_menu)
+
+        preferences_menu = tk.Menu(menubar, tearoff=0)
+        self.sound_enabled = tk.BooleanVar(value=True)  # default: sound ON
+        preferences_menu.add_checkbutton(label="Typing Sounds", onvalue=True, offvalue=False,
+                                  variable=self.sound_enabled)
+        menubar.add_cascade(label="Preferences", menu=preferences_menu)
 
         self.root.config(menu=menubar)
 
@@ -164,10 +190,23 @@ class WordProcessorApp:
                                  bg="#ffffff", relief=tk.FLAT)
         self.text_area.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
+        self.text_area.bind("<Key>", self._play_type_sound) #keystroke sound
+
         self.text_area.vbar.config(command=self.on_textscroll)
         self.bg_canvas.bind("<Configure>", self.resize_bg)
         self.bg_img_original = None
         self.bg_img = None
+
+    def _play_type_sound(self, event):
+        try:
+             if self.sound_enabled.get() and event.char and event.keysym not in ("Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Escape"):
+                sound = random.choice(type_sounds)
+                if sound.get_num_channels() == 0:  # prevent overlap
+                    sound.play()
+        except Exception as e:
+            print(f"Sound error: {e}")
+
+
 
     def select_background_image(self):
         path = filedialog.askopenfilename(title="Select Inspiration Image",
