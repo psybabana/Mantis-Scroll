@@ -3,6 +3,8 @@ from tkinter import filedialog, messagebox, font
 from tkinter.scrolledtext import ScrolledText
 from docx import Document
 from PIL import Image, ImageTk, ImageEnhance
+import time
+import threading
 
 class WordProcessorApp:
     def __init__(self, root):
@@ -14,7 +16,13 @@ class WordProcessorApp:
         self.bg_image_path = None
         self.bg_opacity = 0.3  # default opacity (30%)
 
+        # Timer state
+        self.timer_running = False
+        self.start_time = None
+        self.elapsed_time = 0
+
         self.create_menu()
+        self.create_timer_toolbar()
         self.create_formatting_toolbar()
         self.create_text_area()
 
@@ -35,44 +43,78 @@ class WordProcessorApp:
 
         self.root.config(menu=menubar)
 
+    def create_timer_toolbar(self):
+        timer_frame = tk.Frame(self.root, relief=tk.RAISED, bd=1)
+        timer_frame.pack(side=tk.TOP, fill=tk.X)
+
+        self.timer_label = tk.Label(timer_frame, text="00:00:00.000", font=("Courier", 12, "bold"))
+        self.timer_label.pack(side=tk.LEFT, padx=10)
+
+        tk.Button(timer_frame, text="Start", command=self.start_timer).pack(side=tk.LEFT)
+        tk.Button(timer_frame, text="Pause", command=self.pause_timer).pack(side=tk.LEFT)
+        tk.Button(timer_frame, text="Reset", command=self.reset_timer).pack(side=tk.LEFT)
+
+        self.update_timer_loop()
+
+    def start_timer(self):
+        if not self.timer_running:
+            self.start_time = time.time() - self.elapsed_time
+            self.timer_running = True
+
+    def pause_timer(self):
+        if self.timer_running:
+            self.elapsed_time = time.time() - self.start_time
+            self.timer_running = False
+
+    def reset_timer(self):
+        self.timer_running = False
+        self.elapsed_time = 0
+        self.timer_label.config(text="00:00:00.000")
+
+    def update_timer_loop(self):
+        if self.timer_running:
+            now = time.time()
+            elapsed = now - self.start_time
+            self.elapsed_time = elapsed
+
+            ms = int((elapsed - int(elapsed)) * 1000)
+            s = int(elapsed) % 60
+            m = (int(elapsed) // 60) % 60
+            h = int(elapsed) // 3600
+
+            self.timer_label.config(text=f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}")
+        self.root.after(50, self.update_timer_loop)
+
     def create_formatting_toolbar(self):
         toolbar = tk.Frame(self.root, relief=tk.RAISED, bd=1)
         toolbar.pack(side=tk.TOP, fill=tk.X)
 
-        # Bold button (icon-like)
         self.bold_btn = tk.Button(toolbar, text="B", width=2, font=("Arial", 10, "bold"), command=self.toggle_bold)
         self.bold_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Italic button
         self.italic_btn = tk.Button(toolbar, text="I", width=2, font=("Arial", 10, "italic"), command=self.toggle_italic)
         self.italic_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Underline button
         self.underline_btn = tk.Button(toolbar, text="U", width=2, font=("Arial", 10, "underline"), command=self.toggle_underline)
         self.underline_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Subscript button
         self.subscript_btn = tk.Button(toolbar, text="x₂", width=3, command=self.toggle_subscript)
         self.subscript_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Superscript button
         self.superscript_btn = tk.Button(toolbar, text="x²", width=3, command=self.toggle_superscript)
         self.superscript_btn.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Font family dropdown
         self.font_family_var = tk.StringVar(value="Arial")
         font_families = sorted(list(font.families()))
         self.font_family_menu = tk.OptionMenu(toolbar, self.font_family_var, *font_families, command=self.change_font)
         self.font_family_menu.config(width=15)
         self.font_family_menu.pack(side=tk.LEFT, padx=5, pady=2)
 
-        # Font size dropdown (spinbox)
         self.font_size_var = tk.IntVar(value=12)
         self.font_size_spinbox = tk.Spinbox(toolbar, from_=8, to=72, textvariable=self.font_size_var,
                                             width=5, command=self.change_font)
         self.font_size_spinbox.pack(side=tk.LEFT, padx=5, pady=2)
 
-        # Opacity slider
         tk.Label(toolbar, text="Inspiration Image Opacity").pack(side=tk.LEFT, padx=5)
         self.opacity_var = tk.DoubleVar(value=self.bg_opacity * 100)
         self.opacity_slider = tk.Scale(toolbar, from_=0, to=100, orient=tk.HORIZONTAL, length=100,
@@ -145,7 +187,6 @@ class WordProcessorApp:
 
     def on_textscroll(self, *args):
         self.text_area.yview(*args)
-        # Optional: scroll background with text for effect
         self.bg_canvas.yview_moveto(args[1])
 
     def exit_fullscreen(self, event=None):
@@ -156,7 +197,7 @@ class WordProcessorApp:
             start = self.text_area.index("sel.first")
             end = self.text_area.index("sel.last")
         except tk.TclError:
-            return  # No selection
+            return
 
         if tag_name in self.text_area.tag_names("sel.first"):
             self.text_area.tag_remove(tag_name, start, end)
